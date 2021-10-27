@@ -1,18 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Autofac;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using MT.DI.Test.Infrastructure.Autofac;
+using MT.DI.Test.Infrastructure.Filters;
 using MT.DI.Test.Infrastructure.Options;
 
 namespace MT.DI.Test
@@ -29,14 +24,17 @@ namespace MT.DI.Test
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpContextAccessor();
             services.AddControllers();
             services.AddOptions();
             services.AddSwaggerGen(c =>
             {
+                c.OperationFilter<RequiredFooHeaderFilter>();
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "MT.DI.Test", Version = "v1"});
             });
             
             services.Configure<EventBusOptions>(Configuration.GetSection("EventBus"));
+            services.AddMassTransitHostedService();
         }
         
         // ConfigureContainer is where you can register things directly
