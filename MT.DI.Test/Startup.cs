@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using MT.DI.Test.Infrastructure.Autofac;
+using MT.DI.Test.Infrastructure.Options;
 
 namespace MT.DI.Test
 {
@@ -29,10 +30,13 @@ namespace MT.DI.Test
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddOptions();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "MT.DI.Test", Version = "v1"});
             });
+            
+            services.Configure<EventBusOptions>(Configuration.GetSection("EventBus"));
         }
         
         // ConfigureContainer is where you can register things directly
