@@ -2,9 +2,11 @@
 using Autofac;
 using GreenPipes;
 using MassTransit;
+using MassTransit.RabbitMqTransport.Topology;
 using Microsoft.Extensions.Options;
 using MT.DI.Test.Consumers;
 using MT.DI.Test.Infrastructure.MassTransit.Observer;
+using MT.DI.Test.Infrastructure.MassTransit.RoutingKeyFormatter;
 using MT.DI.Test.Infrastructure.Options;
 using MT.DI.Test.Messages;
 using MT.DI.Test.Provider;
@@ -21,6 +23,8 @@ namespace MT.DI.Test.Infrastructure.Autofac
 
             builder.RegisterGeneric(typeof(FooHeaderDecoratorFilter<>));
             builder.RegisterType<DecoratorObserver>().AsSelf();
+
+            builder.RegisterType<PingMessageRoutingKeyFormatter>().As<IMessageRoutingKeyFormatter<PingRequest>>();
 
             builder.AddMassTransit(x =>
             {
@@ -48,6 +52,13 @@ namespace MT.DI.Test.Infrastructure.Autofac
                     var obs = context.GetRequiredService<DecoratorObserver>();
                     cfg.ConfigurePublish((c) => c.ConnectPublishPipeSpecificationObserver(obs));
                     cfg.ConfigureSend((c) => c.ConnectSendPipeSpecificationObserver(obs));
+
+                    cfg.Send<PingRequest>(configure =>
+                    {
+                        configure.UseRoutingKeyFormatter(
+                            context.GetRequiredService<IMessageRoutingKeyFormatter<PingRequest>>()
+                        );
+                    });
                 });
                 
                 x.AddRequestClient<PingRequest>();
